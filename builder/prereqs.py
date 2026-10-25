@@ -478,6 +478,16 @@ def check_rpmbuild():
     return _status(False, hint=_install_hint("rpmbuild"))
 
 
+def check_dpkg_deb():
+    """dpkg-deb is needed only when producing a Linux .deb artifact."""
+    if _system() != "Linux":
+        return _status(True, note="N/A on non-Linux hosts.")
+    p = _which("dpkg-deb")
+    if p:
+        return _status(True, _run_version(["dpkg-deb", "--version"]) or "dpkg-deb", p)
+    return _status(False, hint=_install_hint("dpkg_deb"))
+
+
 def check_appimage_builder():
     p = _which("appimage-builder")
     from . import appimage_container
@@ -828,6 +838,7 @@ CHECKS = {
     "android_sdk": check_android_sdk,
     "xcode": check_xcode,
     "rpmbuild": check_rpmbuild,
+    "dpkg_deb": check_dpkg_deb,
     "appimage_builder": check_appimage_builder,
     "sccache": check_sccache,
     "imagemagick": check_imagemagick,
@@ -858,6 +869,7 @@ LABELS = {
     "android_sdk": "Android SDK",
     "xcode": "Xcode command-line tools",
     "rpmbuild": "rpmbuild (RPM packaging)",
+    "dpkg_deb": "dpkg-deb (.deb packaging)",
     "appimage_builder": "appimage-builder (AppImage packaging)",
     "sccache": "sccache (Rust/C++ compilation cache)",
     "imagemagick": "ImageMagick (icon/logo branding)",
@@ -946,6 +958,9 @@ def _install_hint(tool):
         },
         "rpmbuild": {
             "Linux": "sudo apt install rpm  (or: sudo dnf install rpm-build)",
+        },
+        "dpkg_deb": {
+            "Linux": "Install dpkg-deb — Arch: sudo pacman -S dpkg; Debian/Ubuntu: sudo apt install dpkg; Fedora: sudo dnf install dpkg",
         },
         "appimage_builder": {
             "Linux": "Use a dedicated Python virtual environment for appimage-builder and quote 'setuptools_scm<10'. Legacy recipes also require apt-key; Debian 13 needs a compatible packaging container.",

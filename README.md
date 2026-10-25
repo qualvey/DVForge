@@ -222,6 +222,7 @@ cd DVForge
 | 🍎 **macOS** (DMG; add Android with `--with-android`) | `bash Setup-DVForge-macOS.sh` |
 | 🪟 **Windows** (`.exe` / `.msi`) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\Setup-DVForge-Windows.ps1` |
 | 🐧 **Windows + WSL2** (Linux packages + Android APKs) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\Setup-DVForge-WSL2.ps1` |
+| 🐧 **Arch Linux** (Linux packages + Android APKs) | `bash Setup-DVForge-Arch.sh` |
 
 > Already inside the cloned folder and don't want it copied elsewhere?
 > macOS: `bash Setup-DVForge-macOS.sh --in-place` · Windows: add `-InPlace`.
@@ -358,6 +359,29 @@ Sets up WSL + Debian, then installs Flutter / Android SDK+NDK / vcpkg / Rust / J
 ### Native Linux
 
 Clone the repo, ensure Python 3.8+, then `./run.sh` and use the toolchain panel's **install missing** to fetch Flutter, Rust, LLVM, NDK, JDK, and vcpkg into `.toolchains/`. Produces `.deb`, `.rpm`, `.AppImage`, and Android APKs.
+
+#### Arch Linux
+
+Arch users can run the native setup script instead of the Ubuntu script:
+
+```bash
+bash Setup-DVForge-Arch.sh
+```
+
+This installs the native build dependencies with `pacman` and bootstraps the
+same portable toolchains into `.toolchains/`. To prepare the rootless AppImage
+packaging container as well:
+
+```bash
+bash Setup-DVForge-Arch.sh --appimage
+```
+
+On Omarchy, the script automatically uses `omarchy update` and `omarchy pkg`
+instead of direct system `pacman` transactions.
+
+Arch can build Linux RPMs and Android APKs directly. DEB output additionally
+needs `dpkg-deb`; Windows and macOS desktop clients must be built on their
+respective host operating systems.
 
 ---
 
@@ -679,6 +703,7 @@ DVForge/
 ├── Setup-DVForge-macOS.sh       # First-time toolchain setup, per OS
 ├── Setup-DVForge-Windows.ps1
 ├── Setup-DVForge-WSL2.ps1
+├── Setup-DVForge-Arch.sh
 ├── Uninstall-DVForge-*.{sh,ps1} # Matching uninstallers
 ├── clean.sh / clean.bat         # Clean-slate reset (keeps config + branding)
 │

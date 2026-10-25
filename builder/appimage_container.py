@@ -38,10 +38,22 @@ def ready():
 def install(home, log, cancelled):
     from . import environment
     if not shutil.which("podman"):
-        if environment.package_manager() != "apt":
-            raise RuntimeError("Automatic AppImage container setup currently requires Debian/Ubuntu")
-        command = ([] if os.geteuid() == 0 else ["sudo", "-n"]) + [
-            "apt-get", "install", "-y", "podman", "uidmap", "slirp4netns", "fuse-overlayfs"]
+        manager = environment.package_manager()
+        packages = ["podman", "uidmap", "slirp4netns", "fuse-overlayfs"]
+        if manager == "apt":
+            command = ([] if os.geteuid() == 0 else ["sudo", "-n"]) + [
+                "apt-get", "install", "-y", *packages]
+        elif manager == "dnf":
+            command = ([] if os.geteuid() == 0 else ["sudo", "-n"]) + [
+                "dnf", "install", "-y", *packages]
+        elif manager == "pacman":
+            if shutil.which("omarchy"):
+                command = ["omarchy", "pkg", "add", *packages]
+            else:
+                command = ([] if os.geteuid() == 0 else ["sudo", "-n"]) + [
+                    "pacman", "-S", "--needed", "--noconfirm", *packages]
+        else:
+            raise RuntimeError("Automatic AppImage container setup requires apt, dnf, or pacman")
         result = environment.run_native_installer(command, log)
         if result.returncode:
             raise RuntimeError("Podman installation failed: " + (result.stderr or ""))

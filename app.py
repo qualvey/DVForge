@@ -399,8 +399,23 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/environment":
             host = detect.host_info()
-            primary = next((t["id"] for t in detect.TARGETS
-                            if host["os"] in t["host_os"] and t["arch"] == host["arch"]
+            # The environment screen needs one native desktop target before
+            # the user reaches target selection. Prefer the package format
+            # native to the Linux distro: Arch/Fedora can proceed with RPM
+            # without requiring dpkg-deb, while Debian/Ubuntu keeps .deb as
+            # the default. A selected .deb/AppImage target still checks and
+            # installs dpkg-deb during its target-specific preflight.
+            preferred = []
+            if host["os"] == "Linux":
+                manager = environment.package_manager()
+                preferred = (["linux-x86_64-rpm", "linux-x86_64-deb"]
+                             if manager in ("dnf", "pacman")
+                             else ["linux-x86_64-deb", "linux-x86_64-rpm"])
+            candidates = preferred + [t["id"] for t in detect.TARGETS]
+            primary = next((tid for tid in candidates
+                            for t in detect.TARGETS
+                            if t["id"] == tid and host["os"] in t["host_os"]
+                            and t["arch"] == host["arch"]
                             and t["platform"] != "android"), None)
             return self._send_json({**environment.report([primary] if primary else [], host),
                                     "targets": [primary] if primary else []})

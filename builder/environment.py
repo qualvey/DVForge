@@ -20,13 +20,15 @@ LINUX_PACKAGES = {
     "dnf": {"git": ["git"], "clang": ["clang"], "llvm": ["llvm-devel", "clang-devel"],
             "cmake": ["cmake"], "ninja": ["ninja-build"], "nasm": ["nasm"],
             "pkgconfig": ["pkgconf-pkg-config"], "rpmbuild": ["rpm-build"],
+            "dpkg_deb": ["dpkg"],
             "linux_libraries": ["gtk3-devel", "libXdo-devel", "libXtst-devel", "libva-devel",
-                                "libvdpau-devel", "pulseaudio-libs-devel", "libayatana-appindicator-gtk3-devel"]},
+                                 "libvdpau-devel", "pulseaudio-libs-devel", "libayatana-appindicator-gtk3-devel"]},
     "pacman": {"git": ["git"], "clang": ["clang"], "llvm": ["llvm"],
-               "cmake": ["cmake"], "ninja": ["ninja"], "nasm": ["nasm"],
+                "cmake": ["cmake"], "ninja": ["ninja"], "nasm": ["nasm"],
                "pkgconfig": ["pkgconf"], "rpmbuild": ["rpm-tools"],
+               "dpkg_deb": ["dpkg"],
                "linux_libraries": ["gtk3", "xdotool", "libxtst", "libva", "libvdpau",
-                                   "libpulse", "libayatana-appindicator"]},
+                                    "libpulse", "libayatana-appindicator"]},
 }
 BREW_PACKAGES = {"git": "git", "cmake": "cmake", "ninja": "ninja", "nasm": "nasm",
                  "pkgconfig": "pkg-config", "create_dmg": "create-dmg", "cocoapods": "cocoapods"}
@@ -123,9 +125,17 @@ def native_command(tool, host, release=None):
         manager = package_manager(release)
         packages = LINUX_PACKAGES.get(manager, {}).get(tool)
         if tool == "dpkg_deb":
-            packages = ["dpkg"] if manager == "apt" else None
+            # dpkg-deb is the package builder, not an Ubuntu-only runtime
+            # dependency. Arch and Fedora can install the dpkg compatibility
+            # tools too, which lets them produce .deb artifacts.
+            packages = ["dpkg"] if manager in ("apt", "dnf", "pacman") else None
         if not packages:
             return None
+        # Omarchy blocks direct pacman transactions. Use its package helper
+        # when available so the Environment panel can install dpkg-deb (and
+        # the other native dependencies) without getting stuck on auth.
+        if manager == "pacman" and shutil.which("omarchy"):
+            return ["omarchy", "pkg", "add", *packages]
         args = {"apt": ["apt-get", "install", "-y"],
                 "dnf": ["dnf", "install", "-y"],
                 "pacman": ["pacman", "-S", "--needed", "--noconfirm"]}[manager]

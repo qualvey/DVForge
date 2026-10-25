@@ -177,7 +177,7 @@ TARGETS = [
     # ---- Linux (Flutter) -> Linux host only ----
     {"id": "linux-x86_64-deb", "platform": "linux", "arch": "x86_64",
      "label": "Linux x86_64 — .deb", "ext": "deb", "host_os": ["Linux"],
-     "note": "Debian/Ubuntu package."},
+     "note": "Debian package; requires dpkg-deb on the build host."},
     {"id": "linux-x86_64-rpm", "platform": "linux", "arch": "x86_64",
      "label": "Linux x86_64 — .rpm (Fedora)", "ext": "rpm", "host_os": ["Linux"],
      "note": "Fedora/RHEL package."},

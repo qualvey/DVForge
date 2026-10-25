@@ -100,6 +100,24 @@ class CommunityTests(unittest.TestCase):
         self.assertEqual("pacman", environment.package_manager({"ID": "arch"}))
         self.assertIsNone(environment.package_manager({"ID": "unknown"}))
 
+    def test_dpkg_deb_can_be_installed_on_arch(self):
+        host = {"os": "Linux", "arch": "x86_64"}
+        with patch.object(environment, "package_manager", return_value="pacman"), \
+                patch.object(environment.shutil, "which", return_value=None):
+            self.assertEqual(
+                ["sudo", "-n", "pacman", "-S", "--needed", "--noconfirm", "dpkg"],
+                environment.native_command("dpkg_deb", host),
+            )
+
+    def test_dpkg_deb_uses_omarchy_package_helper(self):
+        host = {"os": "Linux", "arch": "x86_64"}
+        with patch.object(environment, "package_manager", return_value="pacman"), \
+                patch.object(environment.shutil, "which", return_value="/usr/bin/omarchy"):
+            self.assertEqual(
+                ["omarchy", "pkg", "add", "dpkg"],
+                environment.native_command("dpkg_deb", host),
+            )
+
     def test_requirements_are_target_scoped(self):
         required, errors = environment.required(["linux-x86_64-deb"], LINUX)
         self.assertFalse(errors)
